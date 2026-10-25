@@ -1,5 +1,5 @@
 /* HSK Zeichentrainer service worker */
-const CACHE_VERSION = "hsk-v1";
+const CACHE_VERSION = "hsk-v3";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -9,6 +9,7 @@ const PRECACHE = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
+  "./icons/icon-monochrome-512.png",
   "./icons/apple-touch-icon.png"
 ];
 

@@ -28,5 +28,7 @@
 - [x] Build: empty command, `destination_dir=public`, branch `main`
 - [x] First production deploy live: https://hsk-trainer-eno.pages.dev
 - [x] GitHub Actions workflow: `.github/workflows/deploy-pages.yml`
-- [ ] Add GitHub secret `CLOUDFLARE_API_TOKEN` (Pages Edit) so push deploys
+- [x] GitHub secret `CLOUDFLARE_API_TOKEN` set; push to main deploys (run 40201596843 success)
+- [x] iOS icons: transparent red glyph (`apple-touch-icon`, `icon-192`, `icon-512`). Maskable stays opaque. Cache `hsk-v2`. Home-screen icon updates only after remove and add again.
+- [x] Android: `icon-monochrome-512.png` + manifest `purpose: monochrome` for themed icons. Cache `hsk-v3`. Play Protect WebAPK targetSdk is Chrome-side, not fixable in the static app.
 - [ ] Optional: reinstall Cloudflare GitHub App (error 8000011 blocks native Git connect)

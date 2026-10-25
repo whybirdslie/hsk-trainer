@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>HSK Zeichentrainer</title>
-<meta name="theme-color" content="#B5332B">
+<meta name="theme-color" content="#B5332B" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12161B" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="HSK">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>body{margin:0}[hidden]{display:none!important}</style>
@@ -210,7 +215,7 @@ textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:
 
 <div id="app">
   <header class="top">
-    <div class="brand"><span class="sealmark hz" aria-hidden="true">字</span><b id="brandName">HSK Zeichentrainer</b><span id="syncDot" class="sync" role="img"></span></div>
+    <div class="brand"><span class="sealmark hz" aria-hidden="true">字</span><b id="brandName">HSK Zeichentrainer</b></div>
     <div class="seg" role="group" aria-label="Sprache / Language"><button id="langDe" aria-pressed="true">DE</button><button id="langEn" aria-pressed="false">EN</button></div>
   </header>
   <main id="main"><div class="loading"><div><div class="hz">字</div><div id="loadMsg">Lade Wortschatz…</div></div></div></main>
@@ -265,7 +270,7 @@ const I18N = {
   pLang:"Sprache der Oberfläche", pBack:"Rückseite zeigt", pBoth:"Beides", pPinyin:"Pinyin anzeigen", pAudio:"Audio (Sprachausgabe)", pFont:"Schrift für Zeichen", fKai:"Kaiti", fSong:"Songti", fHei:"Heiti",
   pTheme:"Erscheinungsbild", tSys:"System", tLight:"Hell", tDark:"Dunkel", pNew:"Neue Wörter pro Tag", pSession:"Karten pro Runde", pSpeed:"Dauer Schnellrunde",
   on:"An", off:"Aus", secs:"{n} s",
-  dataTitle:"Fortschritt sichern", syncCloud:"Gespeichert in deinem claude.ai-Konto. Dein Fortschritt ist auf allen Geräten verfügbar, auf denen du diese Seite öffnest.", syncLocal:"Nur auf diesem Gerät gespeichert. Nutze Export und Import, um Fortschritt zu übertragen.", syncWait:"Speicher wird verbunden…",
+  dataTitle:"Fortschritt sichern", syncLocal:"Lokal auf diesem Gerät gespeichert", updateAvail:"Neue Version verfügbar. Tippen zum Neuladen",
   export:"Exportieren (JSON)", import:"Importieren", importPaste:"JSON einfügen", importDo:"Importieren", importMerge:"Mit aktuellem Fortschritt zusammenführen", importOk:"Fortschritt importiert: {n} Wörter.", importBad:"Diese Datei ist kein gültiger Export dieses Trainers.",
   exportFallback:"Kopiere diesen Text und speichere ihn als .json-Datei.", copy:"Kopieren", copied:"Kopiert.", saved:"Gespeichert.", exportDeclined:"Export abgebrochen.",
   reset:"Fortschritt zurücksetzen", resetQ:"Wirklich alle Lerndaten löschen? Einstellungen bleiben erhalten.", resetYes:"Ja, zurücksetzen", cancel:"Abbrechen", resetDone:"Fortschritt zurückgesetzt.",
@@ -311,7 +316,7 @@ const I18N = {
   pLang:"Interface language", pBack:"Card back shows", pBoth:"Both", pPinyin:"Show pinyin", pAudio:"Audio (speech)", pFont:"Character font", fKai:"Kaiti", fSong:"Songti", fHei:"Heiti",
   pTheme:"Appearance", tSys:"System", tLight:"Light", tDark:"Dark", pNew:"New words per day", pSession:"Cards per session", pSpeed:"Speed round length",
   on:"On", off:"Off", secs:"{n} s",
-  dataTitle:"Keep your progress", syncCloud:"Saved in your claude.ai account. Your progress is available on every device where you open this page.", syncLocal:"Saved on this device only. Use export and import to move your progress.", syncWait:"Connecting storage…",
+  dataTitle:"Keep your progress", syncLocal:"Saved on this device", updateAvail:"New version available. Tap to reload",
   export:"Export (JSON)", import:"Import", importPaste:"Paste JSON", importDo:"Import", importMerge:"Merge with current progress", importOk:"Progress imported: {n} words.", importBad:"This file is not a valid export from this trainer.",
   exportFallback:"Copy this text and save it as a .json file.", copy:"Copy", copied:"Copied.", saved:"Saved.", exportDeclined:"Export cancelled.",
   reset:"Reset progress", resetQ:"Really delete all study data? Settings are kept.", resetYes:"Yes, reset", cancel:"Cancel", resetDone:"Progress reset.",
@@ -329,8 +334,7 @@ const POSKEY={n:"posN",v:"posV",a:"posA",d:"posD",q:"posQ",r:"posR",p:"posP",c:"
 const DAY=864e5, MIN=6e4;
 const LS_KEY="hsk3-trainer-v1";
 const DEF_META={lang:"de",back:"both",pinyin:true,audio:true,font:"kai",theme:"sys",newPerDay:15,session:20,speedSec:60,levels:[1],cats:[],log:{},newLog:{},placement:null,setAt:0};
-const S={W:[],C:{},cats:[],rads:{},conf:[],charIdx:new Map(),prog:{v:1,p:{},c:{},meta:{...DEF_META}},tab:"learn",sync:"wait",db:null,uid:null,dirty:new Set(),wl:{q:"",scope:"sel",claude:false,limit:80}};
-let saveTimer=null, writing=false;
+const S={W:[],C:{},cats:[],rads:{},conf:[],charIdx:new Map(),prog:{v:1,p:{},c:{},meta:{...DEF_META}},tab:"learn",wl:{q:"",scope:"sel",claude:false,limit:80}};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function t(k,v){let s=(I18N[S.prog.meta.lang]||I18N.de)[k]??I18N.de[k]??k; if(v) for(const x in v) s=s.split("{"+x+"}").join(v[x]); return s;}
@@ -342,27 +346,8 @@ function toast(msg){const el=$("#toast");el.textContent=msg;el.hidden=false;clea
 /* ================= storage ================= */
 function lsGet(){try{const s=localStorage.getItem(LS_KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function lsSet(){try{localStorage.setItem(LS_KEY,JSON.stringify(S.prog))}catch(e){}}
-const shardOf=id=>"p"+(id%8);
-function markDirty(id){ if(id==null){S.dirty.add("meta");return} S.dirty.add(typeof id==="number"?shardOf(id):id); }
-function save(){ lsSet(); clearTimeout(saveTimer); saveTimer=setTimeout(flush,1800); }
-async function flush(){
-  if(!S.db||!S.uid||writing||!S.dirty.size) return;
-  writing=true;
-  const docs=[...S.dirty]; S.dirty.clear();
-  try{
-    for(const d of docs){
-      const ref=S.db.doc("data/users/"+S.uid+"/"+d);
-      if(d==="meta") await ref.set({m:S.prog.meta,u:Date.now()});
-      else if(d==="chars") await ref.set({r:S.prog.c,u:Date.now()});
-      else { const k=+d.slice(1), r={}; for(const id in S.prog.p) if(id%8===k) r[id]=S.prog.p[id]; await ref.set({r,u:Date.now()}); }
-    }
-    setSync("cloud");
-  }catch(e){ docs.forEach(d=>S.dirty.add(d)); if(e&&e.code==="unavailable") setTimeout(flush,4000); else setSync("local"); }
-  writing=false;
-  if(S.dirty.size) flush();
-}
-function setSync(s){const changed=S.sync!==s;S.sync=s;const d=$("#syncDot");d.className="sync "+(s==="cloud"?"cloud":s==="local"?"local":"");d.title=s==="cloud"?t("syncCloud"):s==="local"?t("syncLocal"):t("syncWait");d.setAttribute("aria-label",d.title); if(changed&&S.tab==="prefs"&&$("#session").hidden&&!$("#wsearch")) render();}
-function mergeMeta(a,b){ // b remote
+function save(){ lsSet(); }
+function mergeMeta(a,b){
   const out={...DEF_META,...a};
   if((b.setAt||0)>(a.setAt||0)) for(const k of ["lang","back","pinyin","audio","font","theme","newPerDay","session","speedSec","levels","cats","setAt"]) if(b[k]!==undefined) out[k]=b[k];
   out.log={...(a.log||{})}; for(const d in (b.log||{})) out.log[d]=Math.max(out.log[d]||0,b.log[d]);
@@ -373,30 +358,6 @@ function mergeMeta(a,b){ // b remote
 function mergeRecs(local,remote,onLocalNewer){
   for(const id in remote){ const r=remote[id], l=local[id]; if(!l||(r[7]||0)>(l[7]||0)) local[id]=r; }
   if(onLocalNewer) for(const id in local){ const r=remote[id]; if(!r||(local[id][7]||0)>(r[7]||0)) onLocalNewer(id); }
-}
-async function connectCloud(){
-  try{
-    if(!window.claude||!window.claude.use){setSync("local");return}
-    const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
-    if(!db||!user){setSync("local");return}
-    const uid=await user.id(); if(!uid){setSync("local");return}
-    S.db=db; S.uid=uid;
-    const base="data/users/"+uid+"/";
-    const metaSnap=await db.doc(base+"meta").get();
-    if(metaSnap.exists){ const rm=metaSnap.data().m||{}; S.prog.meta=mergeMeta(S.prog.meta,rm); }
-    markDirty("meta");
-    for(let k=0;k<8;k++){
-      const snap=await db.doc(base+"p"+k).get();
-      const remote=snap.exists?(snap.data().r||{}):{};
-      let push=!snap.exists&&Object.keys(S.prog.p).some(id=>id%8===k);
-      mergeRecs(S.prog.p,remote,()=>{push=true});
-      if(push) S.dirty.add("p"+k);
-    }
-    const cs=await db.doc(base+"chars").get();
-    if(cs.exists){ const rc=cs.data().r||{}; for(const c in rc){ const l=S.prog.c[c], r=rc[c]; if(!l||(r[2]||0)>(l[2]||0)) S.prog.c[c]=r; } }
-    if(Object.keys(S.prog.c).length) S.dirty.add("chars");
-    lsSet(); setSync("cloud"); applyPrefs(); render(); flush();
-  }catch(e){ setSync("local"); }
 }
 
 /* ================= embedded Kaiti (LXGW WenKai GB, OFL), used where no system Kaiti exists, e.g. iOS/Android ================= */
@@ -450,17 +411,17 @@ function fmtSpan(ms){
   return t("unitY",{n:(d/365).toFixed(1).replace(/\.0$/,"")});
 }
 function stat(id){const r=S.prog.p[id];if(!r)return"new";if(r[2]<=Date.now())return"due";return r[3]>0?"known":"learning"}
-function logActivity(isNew){const d=today();const m=S.prog.meta;m.log[d]=(m.log[d]||0)+1;if(isNew)m.newLog[d]=(m.newLog[d]||0)+1;markDirty()}
+function logActivity(isNew){const d=today();const m=S.prog.meta;m.log[d]=(m.log[d]||0)+1;if(isNew)m.newLog[d]=(m.newLog[d]||0)+1;}
 function recordAnswer(id,ok){ // non-flashcard modes: accuracy, and wrong answers come back soon
   const now=Date.now(); let r=S.prog.p[id];
   if(!r){ if(!ok){ r=[0,2.5,now,0,0,0,1,now]; } else { r=[0,2.5,now+DAY*3650,0,0,1,1,now]; r.unseen=1; } }
   else { r=r.slice(); r[6]++; if(ok) r[5]++; else { r[2]=Math.min(r[2],now); if(r[3]>0){r[4]++;r[1]=Math.max(1.3,r[1]-0.1)} } r[7]=now; }
   if(r.unseen){ // correct on a never-scheduled word: keep stats without scheduling a card
-    S.prog.c["w"+id]=[(S.prog.c["w"+id]?.[0]||0)+1,(S.prog.c["w"+id]?.[1]||0)+1,now];markDirty("chars");logActivity(false);save();return;
+    S.prog.c["w"+id]=[(S.prog.c["w"+id]?.[0]||0)+1,(S.prog.c["w"+id]?.[1]||0)+1,now];logActivity(false);save();return;
   }
-  S.prog.p[id]=r; markDirty(id); logActivity(false); save();
+  S.prog.p[id]=r;  logActivity(false); save();
 }
-function recordChar(ch,ok){const now=Date.now();const r=S.prog.c[ch]||[0,0,0];S.prog.c[ch]=[r[0]+(ok?1:0),r[1]+1,now];markDirty("chars");logActivity(false);save()}
+function recordChar(ch,ok){const now=Date.now();const r=S.prog.c[ch]||[0,0,0];S.prog.c[ch]=[r[0]+(ok?1:0),r[1]+1,now];logActivity(false);save()}
 
 /* ================= selection ================= */
 function pool(scope){
@@ -507,9 +468,8 @@ function applyPrefs(){
   $("#langDe").setAttribute("aria-pressed",m.lang==="de");$("#langEn").setAttribute("aria-pressed",m.lang==="en");
   $("#brandName").textContent=t("appName");
   document.querySelectorAll("[data-t]").forEach(el=>el.textContent=t(el.dataset.t));
-  setSync(S.sync);
 }
-function setLang(l){S.prog.meta.lang=l;S.prog.meta.setAt=Date.now();markDirty();save();applyPrefs();render();if(!$("#session").hidden&&SES.rerender)SES.rerender()}
+function setLang(l){S.prog.meta.lang=l;S.prog.meta.setAt=Date.now();save();applyPrefs();render();if(!$("#session").hidden&&SES.rerender)SES.rerender()}
 function go(tab){S.tab=tab;try{history.replaceState(null,"","#"+tab)}catch(e){}render();window.scrollTo(0,0)}
 function render(){
   if(!S.W.length) return;
@@ -632,7 +592,7 @@ function viewPrefs(){
     <div class="field"><label for="pSpd">${t("pSpeed")}</label><select id="pSpd" data-pref="speedSec">${[30,60,90,120].map(n=>`<option value="${n}" ${m.speedSec===n?"selected":""}>${t("secs",{n})}</option>`).join("")}</select></div>
   </section>
   <section class="panel"><h3>${t("dataTitle")}</h3>
-    <p class="small" style="margin:0"><span class="sync ${S.sync==="cloud"?"cloud":S.sync==="local"?"local":""}" style="display:inline-block;margin-right:8px"></span>${S.sync==="cloud"?t("syncCloud"):S.sync==="local"?t("syncLocal"):t("syncWait")}</p>
+    <p class="small muted" style="margin:0">${t("syncLocal")}</p>
     <div class="row"><button class="btn" data-act="export">${t("export")}</button><button class="btn" data-act="import">${t("import")}</button><button class="btn ghost" data-act="importPaste">${t("importPaste")}</button></div>
     <button class="btn ghost" data-act="reset" style="color:var(--seal);align-self:flex-start">${t("reset")}</button>
   </section>
@@ -777,7 +737,7 @@ function renderFC(){
 }
 function gradeFC(g){
   const id=SES.q.shift(), now=Date.now(), was=S.prog.p[id];
-  const nr=schedule(was,g,now); S.prog.p[id]=nr; markDirty(id); logActivity(!was); save();
+  const nr=schedule(was,g,now); S.prog.p[id]=nr;  logActivity(!was); save();
   if(g>0) SES.cor++;
   SES.done++;
   if(nr[2]-now<20*MIN){ const pos=Math.min(SES.q.length,g===0?3:6); SES.q.splice(pos,0,id); SES.done--; SES.relearn=(SES.relearn||0)+1; }
@@ -969,7 +929,7 @@ function placeNext(){
   renderPlace();
 }
 function endPlace(){
-  const rec=SES.rec; S.prog.meta.placement={rec,at:Date.now(),res:SES.res}; markDirty(); save();
+  const rec=SES.rec; S.prog.meta.placement={rec,at:Date.now(),res:SES.res};  save();
   const allPass=SES.lv===7&&SES.res[7]&&SES.res[7][0]>=2;
   frame(1,"",`<div class="result"><div class="badge" style="font-size:20px;padding:10px 14px;border-width:2.5px">HSK ${lvName(rec)}</div><h2>${allPass?t("placeResAll"):t("placeRes",{l:lvName(rec)})}</h2>
    <div class="list">${Object.keys(SES.res).map(l=>`<div class="li"><span class="badge">HSK ${lvName(+l)}</span><span class="small">${t("placeDetail",{l:lvName(+l),a:SES.res[l][0],b:SES.res[l][1]})}</span></div>`).join("")}</div></div>`,
@@ -994,8 +954,23 @@ function startMode(k){
 async function doExport(){
   const payload=JSON.stringify({app:"hsk3-zeichentrainer",v:1,exportedAt:new Date().toISOString(),words:S.W.length,progress:S.prog},null,1);
   const name="hsk-fortschritt-"+today()+".json";
-  try{ const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null;
-    if(dl){ try{await dl.save({filename:name,data:payload});toast(t("saved"));return}catch(e){ if(e&&e.code==="declined"){toast(t("exportDeclined"));return} } }
+  const blob=new Blob([payload],{type:"application/json"});
+  const file=new File([blob],name,{type:"application/json"});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:name});
+      toast(t("saved"));
+      return;
+    }
+  }catch(e){ if(e&&e.name==="AbortError") return; }
+  try{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download=name; a.rel="noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    toast(t("saved"));
+    return;
   }catch(e){}
   openSheet(t("export"),`<p class="small" style="margin:0">${t("exportFallback")}</p><textarea id="exportTxt" readonly>${esc(payload)}</textarea><button class="btn primary" data-act="copyExport">${t("copy")}</button>`);
 }
@@ -1004,7 +979,6 @@ function importData(txt,merge){
   const p=d&&d.progress; if(!p||typeof p!=="object"||!p.p||!p.meta){toast(t("importBad"));return}
   if(merge){ mergeRecs(S.prog.p,p.p); for(const c in (p.c||{})){const l=S.prog.c[c],r=p.c[c];if(!l||(r[2]||0)>(l[2]||0))S.prog.c[c]=r} S.prog.meta=mergeMeta(S.prog.meta,p.meta); }
   else { S.prog={v:1,p:p.p,c:p.c||{},meta:{...DEF_META,...p.meta}}; }
-  for(let k=0;k<8;k++)S.dirty.add("p"+k); S.dirty.add("chars"); S.dirty.add("meta");
   save(); applyPrefs(); closeSheet(); render(); toast(t("importOk",{n:Object.keys(p.p).length}));
 }
 function importSheet(prefill){
@@ -1025,7 +999,7 @@ document.addEventListener("click",e=>{
     case "selLvAll": SEL.levels=new Set(SEL.levels.size===7?[]:[1,2,3,4,5,6,7]);renderSel();break;
     case "selCat": {const v=+el.dataset.v;SEL.cats.has(v)?SEL.cats.delete(v):SEL.cats.add(v);renderSel();break}
     case "selCatAll": SEL.cats=new Set();renderSel();break;
-    case "selApply": if(!SEL.levels.size){toast(t("needLevel"));break} m.levels=[...SEL.levels].sort();m.cats=[...SEL.cats].sort((a,b)=>a-b);m.setAt=Date.now();markDirty();save();closeSheet();render();break;
+    case "selApply": if(!SEL.levels.size){toast(t("needLevel"));break} m.levels=[...SEL.levels].sort();m.cats=[...SEL.cats].sort((a,b)=>a-b);m.setAt=Date.now();save();closeSheet();render();break;
     case "closeSheet": closeSheet(); break;
     case "startFC": closeSheet(); startFlashcards("normal"); break;
     case "startFCextra": case "startFCreview": closeSheet(); startFlashcards("review"); break;
@@ -1047,22 +1021,22 @@ document.addEventListener("click",e=>{
     case "placeGo": SES.started=true; renderPlace(); break;
     case "placePick": placePick(+el.dataset.i); break;
     case "placeNext": placeNext(); break;
-    case "placeSet": m.levels=[+el.dataset.l]; m.setAt=Date.now(); markDirty(); save(); closeSession(); break;
+    case "placeSet": m.levels=[+el.dataset.l]; m.setAt=Date.now();  save(); closeSession(); break;
     case "word": wordSheet(+el.dataset.id); break;
     case "charInfo": e.stopPropagation(); charSheet(el.dataset.ch); break;
-    case "dueNow": { const id=+el.dataset.id; const r=S.prog.p[id]; S.prog.p[id]=r?[...r.slice(0,2),Date.now(),...r.slice(3,7),r[7]||Date.now()]:[0,2.5,Date.now(),0,0,0,0,Date.now()]; markDirty(id); save(); toast(t("markedDue")); closeSheet(); render(); break; }
+    case "dueNow": { const id=+el.dataset.id; const r=S.prog.p[id]; S.prog.p[id]=r?[...r.slice(0,2),Date.now(),...r.slice(3,7),r[7]||Date.now()]:[0,2.5,Date.now(),0,0,0,0,Date.now()];  save(); toast(t("markedDue")); closeSheet(); render(); break; }
     case "wscope": S.wl.scope=el.dataset.v; S.wl.limit=80; render(); break;
     case "wclaude": S.wl.claude=!S.wl.claude; S.wl.limit=80; render(); break;
     case "wmore": S.wl.limit+=120; render(); break;
     case "reviewClaude": S.wl={q:"",scope:"all",claude:true,limit:80}; go("words"); break;
-    case "pref": { const k=el.dataset.k; let v=el.dataset.v; if(v==="true")v=true; else if(v==="false")v=false; m[k]=v; m.setAt=Date.now(); markDirty(); save(); applyPrefs(); render(); break; }
+    case "pref": { const k=el.dataset.k; let v=el.dataset.v; if(v==="true")v=true; else if(v==="false")v=false; m[k]=v; m.setAt=Date.now();  save(); applyPrefs(); render(); break; }
     case "export": doExport(); break;
     case "import": $("#importFile").click(); break;
     case "importPaste": importSheet(""); break;
     case "doImport": importData($("#importTxt").value,$("#importMerge").checked); break;
     case "copyExport": { const ta=$("#exportTxt"); navigator.clipboard&&navigator.clipboard.writeText(ta.value).then(()=>toast(t("copied")),()=>{ta.select()}); if(!navigator.clipboard)ta.select(); break; }
     case "reset": openSheet(t("reset"),`<p style="margin:0">${t("resetQ")}</p><div class="row"><button class="btn" data-act="closeSheet">${t("cancel")}</button><button class="btn seal" data-act="resetYes">${t("resetYes")}</button></div>`); break;
-    case "resetYes": S.prog.p={}; S.prog.c={}; m.log={}; m.newLog={}; m.placement=null; for(let k=0;k<8;k++)S.dirty.add("p"+k); S.dirty.add("chars"); markDirty(); save(); closeSheet(); render(); toast(t("resetDone")); break;
+    case "resetYes": S.prog.p={}; S.prog.c={}; m.log={}; m.newLog={}; m.placement=null; save(); closeSheet(); render(); toast(t("resetDone")); break;
   }
 });
 $("#sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
@@ -1071,7 +1045,7 @@ document.addEventListener("input",e=>{
   if(e.target.id==="wsearch"){S.wl.q=e.target.value;S.wl.limit=80;clearTimeout(S._st);S._st=setTimeout(()=>{const pos=e.target.selectionStart;render();const n=$("#wsearch");if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(x){}}},180)}
 });
 document.addEventListener("change",e=>{
-  const k=e.target.dataset&&e.target.dataset.pref; if(k){S.prog.meta[k]=+e.target.value;S.prog.meta.setAt=Date.now();markDirty();save();render()}
+  const k=e.target.dataset&&e.target.dataset.pref; if(k){S.prog.meta[k]=+e.target.value;S.prog.meta.setAt=Date.now();save();render()}
   if(e.target.id==="importFile"){const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>importSheet(String(rd.result));rd.readAsText(f);e.target.value=""}
 });
 document.addEventListener("keydown",e=>{
@@ -1085,21 +1059,54 @@ document.addEventListener("keydown",e=>{
   else if(SES.kind==="speed"&&SES.running){ if(k==="ArrowRight"||k==="k")speedAns(1); else if(k==="ArrowLeft"||k==="j")speedAns(0); }
   else if(SES.kind==="place"&&SES.started&&!SES.finished){ if(SES.answered==null&&/^[1-4]$/.test(k))placePick(+k-1); else if(SES.answered!=null&&(k==="Enter"||k===" ")){e.preventDefault();placeNext()} }
 });
-window.addEventListener("pagehide",()=>{lsSet();flush()});
-document.addEventListener("visibilitychange",()=>{if(document.hidden){lsSet();flush()}});
+window.addEventListener("pagehide",()=>{lsSet()});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){lsSet()}});
 
 /* ================= boot ================= */
+function registerSW(){
+  if(!("serviceWorker" in navigator)) return;
+  const ok=location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1";
+  if(!ok) return;
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(refreshing) return; refreshing=true; location.reload();
+  });
+  navigator.serviceWorker.register("./sw.js").then(reg=>{
+    const ask=(worker)=>{
+      if(!worker) return;
+      const el=$("#toast");
+      el.textContent=t("updateAvail");
+      el.hidden=false;
+      el.style.cursor="pointer";
+      const go=()=>{
+        el.removeEventListener("click",go);
+        el.style.cursor="";
+        el.hidden=true;
+        worker.postMessage({type:"SKIP_WAITING"});
+      };
+      el.addEventListener("click",go);
+      clearTimeout(toast._t);
+    };
+    if(reg.waiting) ask(reg.waiting);
+    reg.addEventListener("updatefound",()=>{
+      const nw=reg.installing; if(!nw) return;
+      nw.addEventListener("statechange",()=>{
+        if(nw.state==="installed"&&navigator.serviceWorker.controller) ask(nw);
+      });
+    });
+  }).catch(()=>{});
+}
 (async function boot(){
+  try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){}
   const local=lsGet();
   if(local&&local.p&&local.meta){S.prog={v:1,p:local.p,c:local.c||{},meta:{...DEF_META,...local.meta}}}
-  
   const h=(location.hash||"").slice(1); if(["learn","stats","words","prefs"].includes(h)) S.tab=h;
   applyPrefs(); $("#loadMsg").textContent=t("loading");
   try{ await loadData(); }
   catch(e){ $("#main").innerHTML=`<div class="loading"><div><div class="hz">字</div><p>${t("loadFail")}</p></div></div>`; return; }
   $("#tabs").hidden=false; render();
   loadKai();
-  connectCloud();
+  registerSW();
 })();
 </script>
 

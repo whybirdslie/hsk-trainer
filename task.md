@@ -31,4 +31,7 @@
 - [x] GitHub secret `CLOUDFLARE_API_TOKEN` set; push to main deploys (run 40201596843 success)
 - [x] iOS icons: transparent red glyph (`apple-touch-icon`, `icon-192`, `icon-512`). Maskable stays opaque. Cache `hsk-v2`. Home-screen icon updates only after remove and add again.
 - [x] Android: `icon-monochrome-512.png` + manifest `purpose: monochrome` for themed icons. Cache `hsk-v3`. Play Protect WebAPK targetSdk is Chrome-side, not fixable in the static app.
+- [x] Text selection: app chrome (buttons, tabs, title, badges, stats labels) is `user-select: none` plus `-webkit-touch-callout: none`, so iOS long-press does not offer Kopieren/Nachschlagen. Study text uses `.copy` (hanzi, pinyin, DE/EN gloss, examples, components, quiz answers). Inputs stay editable. A selection gesture does not also activate the control under it. Cache `hsk-v4`.
+- [x] Tabs: inactive tabs drop `aria-current` instead of `aria-current="false"`.
+- [x] iOS status bar: `black-translucent` + `theme-color` `#12161B` when the applied theme is dark, `default` + `#B5332B` when light. Follows in-app theme and system changes. Home-screen apps may keep the old bar until removed and added again.
 - [ ] Optional: reinstall Cloudflare GitHub App (error 8000011 blocks native Git connect)

@@ -38,7 +38,8 @@
   --paper:#12161B; --card:#1A1F26; --sunk:#232932; --ink:#ECEEE9; --ink2:#B6BBC2; --ink3:#828A94; --line:#2E353F;
   --grid:#5C2F2B; --seal:#E05A4E; --seal-ink:#1A0F0D; --jade:#62B896; --jade-bg:#1D3A30; --amber:#E3A646; --amber-bg:#3B2E17;
   --sky:#86B6E0; --sky-bg:#1C2D3E; --red-bg:#3E2020; color-scheme:dark }
-body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--ui);-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--ui);-webkit-text-size-adjust:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,.copy{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -455,7 +456,7 @@ const audioOn=()=>S.prog.meta.audio&&("speechSynthesis" in window);
 const audioBtn=txt=>audioOn()?`<button class="audio" data-say="${esc(txt)}" aria-label="Audio">${ICON.sound}</button>`:"";
 const ICON={repeat:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>',sound:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>'};
 const GRID='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><g stroke="currentColor" stroke-width=".7" stroke-dasharray="2.5 2.5" fill="none" vector-effect="non-scaling-stroke"><line x1="0" y1="0" x2="100" y2="100" vector-effect="non-scaling-stroke"/><line x1="100" y1="0" x2="0" y2="100" vector-effect="non-scaling-stroke"/><line x1="50" y1="0" x2="50" y2="100" vector-effect="non-scaling-stroke"/><line x1="0" y1="50" x2="100" y2="50" vector-effect="non-scaling-stroke"/></g></svg>';
-function bigHz(h,sm){const n=[...h].length;const cls=(n===1?"":"multi"+(n>=5?" l5":n===4?" l4":n===3?" l3":""))+(sm?" sm":"");return `<div class="bigz ${cls}">${n===1?GRID:""}<span class="hz">${esc(h)}</span></div>`}
+function bigHz(h,sm){const n=[...h].length;const cls=(n===1?"":"multi"+(n>=5?" l5":n===4?" l4":n===3?" l3":""))+(sm?" sm":"");return `<div class="bigz ${cls}">${n===1?GRID:""}<span class="hz copy">${esc(h)}</span></div>`}
 
 /* ================= rendering: shell ================= */
 function applyPrefs(){
@@ -465,15 +466,20 @@ function applyPrefs(){
   else if(applyPrefs._own) root.removeAttribute("data-theme");
   applyPrefs._own=m.theme!=="sys";
   root.lang=m.lang==="en"?"en":"de";
+  const dark=m.theme==="dark"||(m.theme!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);
+  const bar=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if(bar) bar.content=dark?"black-translucent":"default";
+  document.querySelectorAll('meta[name="theme-color"]').forEach(el=>{el.content=dark?"#12161B":"#B5332B"});
   $("#langDe").setAttribute("aria-pressed",m.lang==="de");$("#langEn").setAttribute("aria-pressed",m.lang==="en");
   $("#brandName").textContent=t("appName");
   document.querySelectorAll("[data-t]").forEach(el=>el.textContent=t(el.dataset.t));
 }
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(S.prog.meta.theme==="sys")applyPrefs()})}catch(e){}
 function setLang(l){S.prog.meta.lang=l;S.prog.meta.setAt=Date.now();save();applyPrefs();render();if(!$("#session").hidden&&SES.rerender)SES.rerender()}
 function go(tab){S.tab=tab;try{history.replaceState(null,"","#"+tab)}catch(e){}render();window.scrollTo(0,0)}
 function render(){
   if(!S.W.length) return;
-  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"page":"false"));
+  document.querySelectorAll("#tabs button").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   const v={learn:viewLearn,stats:viewStats,words:viewWords,prefs:viewPrefs}[S.tab]||viewLearn;
   $("#main").innerHTML=`<div class="wrap">${v()}</div>`;
 }
@@ -495,7 +501,7 @@ function viewLearn(){
   return `
   <button class="sel" data-act="openSel"><div class="grow"><div class="lv">${esc(s.lvTxt)}</div><div class="small muted">${esc(s.cats)} · ${t("wordsN",{n:P.length.toLocaleString()})}</div></div><span class="chip">${t("change")}</span></button>
   <section class="panel">
-    <div class="study"><div class="mizi">${GRID}<span>${esc(ch)}</span></div>
+    <div class="study"><div class="mizi">${GRID}<span class="copy">${esc(ch)}</span></div>
       <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><h2>${t("flashcards")}</h2>
         <div class="counts"><div class="count"><b>${q.due}</b><span>${t("dueToday")}</span></div><div class="count"><b>${q.newAvail}</b><span>${t("newAvail")}</span></div><div class="count"><b>${q.learned}</b><span>${t("learnedL")}</span></div></div>
       </div></div>
@@ -552,7 +558,7 @@ function viewStats(){
     <div class="legend"><span><i style="background:var(--jade)"></i>${t("legMastered")}</span><span><i style="background:color-mix(in srgb,var(--jade) 45%,var(--sunk))"></i>${t("legLearned")}</span></div>
   </section>
   <section class="panel"><h3>${t("weakest")}</h3>
-    ${weak.length?`<div class="weak">${weak.map(([c,a])=>`<button data-act="charInfo" data-ch="${esc(c)}"><span class="hz">${esc(c)}</span><small>${Math.round(a[0]/a[1]*100)} %</small></button>`).join("")}</div>`:`<p class="small muted" style="margin:0">${t("weakNone")}</p>`}
+    ${weak.length?`<div class="weak">${weak.map(([c,a])=>`<button data-act="charInfo" data-ch="${esc(c)}"><span class="hz copy">${esc(c)}</span><small>${Math.round(a[0]/a[1]*100)} %</small></button>`).join("")}</div>`:`<p class="small muted" style="margin:0">${t("weakNone")}</p>`}
   </section>
   <section class="panel"><h3>${t("perCat")}</h3><div class="bars">${catBars}</div><p class="small muted" style="margin:0">${t("catAuto")}</p></section>`;
 }
@@ -570,7 +576,7 @@ function viewWords(){
   <input class="search" id="wsearch" type="search" placeholder="${esc(t("searchPh"))}" value="${esc(st.q)}" autocomplete="off" aria-label="${esc(t("searchPh"))}">
   <div class="row"><div class="seg" role="group"><button data-act="wscope" data-v="sel" aria-pressed="${st.scope==="sel"}">${t("scopeSel")}</button><button data-act="wscope" data-v="all" aria-pressed="${st.scope==="all"}">${t("scopeAll")}</button></div>
   <button class="chip" data-act="wclaude" aria-pressed="${st.claude}">${t("onlyClaude")}</button><span class="small muted">${t("results",{n:list.length.toLocaleString()})}</span></div>
-  ${shown.length?`<div class="wl">${shown.map(w=>{const s=stat(w.i);return `<button class="wi" data-act="word" data-id="${w.i}"><span class="hz">${esc(w.h)}</span><span class="meta"><span class="py">${esc(pyOf(w))}</span><span class="mn">${esc(meaning(w,null,true))}</span></span><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="dot ${s==="known"?"k":s==="learning"?"l":s==="due"?"d":""}" title="${esc(t(s==="known"?"stKnown":s==="learning"?"stLearning":s==="due"?"stDue":"stNew"))}"></span><span class="badge">${lvName(w.lv)}</span></span></button>`}).join("")}</div>`:`<p class="muted">${t("noResults")}</p>`}
+  ${shown.length?`<div class="wl">${shown.map(w=>{const s=stat(w.i);return `<button class="wi" data-act="word" data-id="${w.i}"><span class="hz copy">${esc(w.h)}</span><span class="meta"><span class="py copy">${esc(pyOf(w))}</span><span class="mn copy">${esc(meaning(w,null,true))}</span></span><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="dot ${s==="known"?"k":s==="learning"?"l":s==="due"?"d":""}" title="${esc(t(s==="known"?"stKnown":s==="learning"?"stLearning":s==="due"?"stDue":"stNew"))}"></span><span class="badge">${lvName(w.lv)}</span></span></button>`}).join("")}</div>`:`<p class="muted">${t("noResults")}</p>`}
   ${list.length>st.limit?`<button class="btn block" data-act="wmore">${t("more")}</button>`:""}`;
 }
 
@@ -640,18 +646,18 @@ function wordSheet(id){
 function charSheet(ch){
   const c=S.C[ch]; if(!c) return;
   const ws=(S.charIdx.get(ch)||[]).slice(0,12).map(i=>S.W[i]);
-  openSheet(ch,`<div class="card">${bigHz(ch)}<div class="pyl">${esc(c.py)}</div>
-    <div class="mean">${S.prog.meta.lang==="de"&&c.de?esc(c.de):esc(c.en)}</div>
+  openSheet(ch,`<div class="card">${bigHz(ch)}<div class="pyl copy">${esc(c.py)}</div>
+    <div class="mean"><span class="copy">${S.prog.meta.lang==="de"&&c.de?esc(c.de):esc(c.en)}</span></div>
     ${charParts(ch)}</div>
-    <div class="list">${ws.map(w=>`<button class="li" data-act="word" data-id="${w.i}" style="text-align:left"><span class="hz">${esc(w.h)}</span><span><b class="small">${esc(pyOf(w))}</b><br><span class="small">${esc(meaning(w,null,true))}</span></span></button>`).join("")}</div>`);
+    <div class="list">${ws.map(w=>`<button class="li" data-act="word" data-id="${w.i}" style="text-align:left"><span class="hz copy">${esc(w.h)}</span><span><b class="small copy">${esc(pyOf(w))}</b><br><span class="small copy">${esc(meaning(w,null,true))}</span></span></button>`).join("")}</div>`);
 }
 function radInfo(r){const x=S.rads[r];if(!x)return "";return (S.prog.meta.lang==="en"?x.en:x.de)+(x.zh?` · ${x.zh}`:"")}
 function charParts(ch){
   const c=S.C[ch]; if(!c) return "";
   const parts=c.cmp.length?c.cmp:[];
   return `<div class="feedback" style="width:100%;box-sizing:border-box"><div class="small muted">${t("parts")}</div>
-   <div class="cmp"><span class="hz" style="font-size:34px">${esc(ch)}</span><span class="op">=</span>${parts.map(p=>`<span class="cbox"><span class="hz">${esc(p)}</span><span>${esc(compMeaning(p))}${p===c.rad?` <span class="tag info">${t("radical")}</span>`:""}</span></span>`).join('<span class="op">+</span>')||'<span class="small muted">–</span>'}</div>
-   <div class="small">${t("radical")}: <span class="hz" style="font-size:18px">${esc(c.rad)}</span> ${esc(radInfo(c.rad))} · ${t("strokes",{n:c.st})}</div></div>`;
+   <div class="cmp"><span class="hz copy" style="font-size:34px">${esc(ch)}</span><span class="op">=</span>${parts.map(p=>`<span class="cbox"><span class="hz copy">${esc(p)}</span><span><span class="copy">${esc(compMeaning(p))}</span>${p===c.rad?` <span class="tag info">${t("radical")}</span>`:""}</span></span>`).join('<span class="op">+</span>')||'<span class="small muted">–</span>'}</div>
+   <div class="small">${t("radical")}: <span class="hz copy" style="font-size:18px">${esc(c.rad)}</span> <span class="copy">${esc(radInfo(c.rad))}</span> · ${t("strokes",{n:c.st})}</div></div>`;
 }
 function compMeaning(p){
   const r=S.rads[p]; if(r) return S.prog.meta.lang==="en"?r.en:r.de;
@@ -663,16 +669,16 @@ function compMeaning(p){
 function backHtml(w,o={}){
   const m=S.prog.meta, back=o.both?"both":m.back, showPy=o.forcePinyin||m.pinyin;
   const senses=w.s.map(s=>{
-    const de=s.de?`<div class="mean"><span class="lang">DE</span>${esc(s.de)}${s.deSrc==="c"?` <span class="tag warn">${t("deByClaude")}</span>`:""}</div>`:"";
-    const en=s.en?`<div class="mean"><span class="lang">EN</span>${esc(s.en)}${s.enSrc==="c"?` <span class="tag warn">${t("enByClaude")}</span>`:""}</div>`:"";
-    return `<div class="sense">${w.s.length>1&&showPy?`<div class="pys">${esc(s.py)}</div>`:""}${back==="de"?de||en:back==="en"?en||de:de+en}</div>`;
+    const de=s.de?`<div class="mean"><span class="lang">DE</span><span class="copy">${esc(s.de)}</span>${s.deSrc==="c"?` <span class="tag warn">${t("deByClaude")}</span>`:""}</div>`:"";
+    const en=s.en?`<div class="mean"><span class="lang">EN</span><span class="copy">${esc(s.en)}</span>${s.enSrc==="c"?` <span class="tag warn">${t("enByClaude")}</span>`:""}</div>`:"";
+    return `<div class="sense">${w.s.length>1&&showPy?`<div class="pys copy">${esc(s.py)}</div>`:""}${back==="de"?de||en:back==="en"?en||de:de+en}</div>`;
   }).join("");
   const ex=w.ex?`<div class="ex"><div class="small muted">${t("example")} · ${w.ex.src==="c"?t("exSrcC"):w.ex.src==="hc"?t("exSrcHC"):w.ex.src==="t"?t("exSrcT"):w.ex.src==="tc"?t("exSrcTC"):t("exSrcH")+" · "+t("enByClaude")}</div>
-    <div class="row" style="gap:8px;flex-wrap:nowrap;align-items:flex-start"><div style="flex:1;min-width:0"><div class="zh">${esc(w.ex.zh)}</div>${showPy?`<div class="py">${esc(w.ex.py)}</div>`:""}</div>${audioBtn(w.ex.zh)}</div>
-    ${back!=="en"?`<div class="tr">${esc(w.ex.de)}</div>`:""}${back!=="de"?`<div class="tr">${esc(w.ex.en)}</div>`:""}</div>`:"";
+    <div class="row" style="gap:8px;flex-wrap:nowrap;align-items:flex-start"><div style="flex:1;min-width:0"><div class="zh copy">${esc(w.ex.zh)}</div>${showPy?`<div class="py copy">${esc(w.ex.py)}</div>`:""}</div>${audioBtn(w.ex.zh)}</div>
+    ${back!=="en"?`<div class="tr copy">${esc(w.ex.de)}</div>`:""}${back!=="de"?`<div class="tr copy">${esc(w.ex.en)}</div>`:""}</div>`:"";
   const chars=[...w.h].filter(c=>S.C[c]);
-  const cb=chars.length>1||o.both?`<div class="chars">${chars.map(c=>`<button class="cbox" data-act="charInfo" data-ch="${esc(c)}"><span class="hz">${esc(c)}</span><span>${esc(S.C[c].py.split("/")[0])}<br><span class="muted">${t("radical")} ${esc(S.C[c].rad)}</span></span></button>`).join("")}</div>`:"";
-  return `<div class="back">${showPy?`<div class="pyl">${esc(pyOf(w))}</div>`:""}${senses}${ex}${cb}</div>`;
+  const cb=chars.length>1||o.both?`<div class="chars">${chars.map(c=>`<button class="cbox" data-act="charInfo" data-ch="${esc(c)}"><span class="hz copy">${esc(c)}</span><span><span class="copy">${esc(S.C[c].py.split("/")[0])}</span><br><span class="muted">${t("radical")} <span class="copy">${esc(S.C[c].rad)}</span></span></span></button>`).join("")}</div>`:"";
+  return `<div class="back">${showPy?`<div class="pyl copy">${esc(pyOf(w))}</div>`:""}${senses}${ex}${cb}</div>`;
 }
 
 /* ================= sessions ================= */
@@ -801,7 +807,7 @@ function renderMC(){
   const {w,mode,opts}=SES.cur, a=SES.answered;
   const label=x=>mode==="py"?pyOf(x):meaning(x,null,true);
   const body=`<div class="card">${bigHz(w.h,a!=null)}<div class="prompt"><div class="q">${mode==="py"?t("mcAskP"):t("mcAskM")}</div></div></div>
-   <div class="opts">${opts.map((x,i)=>`<button class="opt ${a!=null?(x===w?"ok":(i===a?"bad":"")):""}" data-act="mcPick" data-i="${i}" ${a!=null?"disabled":""}><span class="k">${i+1}</span><span>${esc(label(x))}</span></button>`).join("")}</div>
+   <div class="opts">${opts.map((x,i)=>`<button class="opt ${a!=null?(x===w?"ok":(i===a?"bad":"")):""}" data-act="mcPick" data-i="${i}" ${a!=null?"disabled":""}><span class="k">${i+1}</span><span class="copy">${esc(label(x))}</span></button>`).join("")}</div>
    ${a!=null?`<div class="card" style="align-items:stretch"><div class="row" style="justify-content:space-between"><b style="color:${opts[a]===w?"var(--jade)":"var(--seal)"}">${opts[a]===w?t("correct"):t("wrong")}</b>${audioBtn(w.h)}</div>${backHtml(w,{forcePinyin:true})}</div>`:""}`;
   frame(SES.idx/SES.items.length,`${SES.idx+1} / ${SES.items.length}`,body,a!=null?`<button class="btn primary block" data-act="mcNext" style="min-height:52px">${t("next")}</button>`:"");
 }
@@ -828,10 +834,10 @@ function charMean(c){const x=S.C[c];if(!x)return"";const s=S.prog.meta.lang==="d
 function renderSim(){
   if(SES.idx>=SES.items.length) return endQuiz(SES.cor,SES.items.length,"sim");
   const it=SES.items[SES.idx], c=S.C[it.target], a=SES.answered;
-  const body=`<div class="card"><div class="prompt"><div class="q">${t("simAsk")}</div><div class="big">${esc(c.py)}</div><div>${esc(charMean(it.target))}</div></div></div>
-   <div class="opts hzopts">${it.opts.map((x,i)=>`<button class="opt hzo ${a!=null?(x===it.target?"ok":(i===a?"bad":"")):""}" data-act="simPick" data-i="${i}" ${a!=null?"disabled":""} aria-label="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+  const body=`<div class="card"><div class="prompt"><div class="q">${t("simAsk")}</div><div class="big copy">${esc(c.py)}</div><div class="copy">${esc(charMean(it.target))}</div></div></div>
+   <div class="opts hzopts">${it.opts.map((x,i)=>`<button class="opt hzo ${a!=null?(x===it.target?"ok":(i===a?"bad":"")):""}" data-act="simPick" data-i="${i}" ${a!=null?"disabled":""} aria-label="${esc(x)}"><span class="copy">${esc(x)}</span></button>`).join("")}</div>
    ${a!=null?`<div class="feedback"><b style="color:${it.opts[a]===it.target?"var(--jade)":"var(--seal)"}">${it.opts[a]===it.target?t("correct"):t("wrong")}</b><div class="small muted">${t("simWhy")}</div>
-   <div class="list">${it.opts.map(x=>{const y=S.C[x];return `<div class="li"><span class="hz">${esc(x)}</span><span class="small"><b>${esc(y.py)}</b> · ${esc(charMean(x))}<br><span class="muted">${t("radical")} ${esc(y.rad)} · ${t("strokes",{n:y.st})}${y.cmp.length?" · "+esc(y.cmp.join(" + ")):""}</span></span></div>`}).join("")}</div></div>`:""}`;
+   <div class="list">${it.opts.map(x=>{const y=S.C[x];return `<div class="li"><span class="hz copy">${esc(x)}</span><span class="small"><b class="copy">${esc(y.py)}</b> · <span class="copy">${esc(charMean(x))}</span><br><span class="muted">${t("radical")} <span class="copy">${esc(y.rad)}</span> · ${t("strokes",{n:y.st})}${y.cmp.length?` · <span class="copy">${esc(y.cmp.join(" + "))}</span>`:""}</span></span></div>`}).join("")}</div></div>`:""}`;
   frame(SES.idx/SES.items.length,`${SES.idx+1} / ${SES.items.length}`,body,a!=null?`<button class="btn primary block" data-act="simNext" style="min-height:52px">${t("next")}</button>`:"");
 }
 
@@ -858,12 +864,12 @@ function renderRad(){
   const correctIdx=it.type==="A"?it.opts.indexOf(it.rad):it.opts.indexOf(it.c);
   if(it.type==="A"){
     body=`<div class="card">${bigHz(it.c,a!=null)}<div class="prompt"><div class="q">${t("radAskA")}</div></div></div>
-     <div class="opts">${it.opts.map((r,i)=>`<button class="opt ${a!=null?(i===correctIdx?"ok":(i===a?"bad":"")):""}" data-act="radPick" data-i="${i}" ${a!=null?"disabled":""}><span class="hz" style="font-size:30px;line-height:1">${esc(r)}</span><span>${esc(radInfo(r))}</span></button>`).join("")}</div>`;
+     <div class="opts">${it.opts.map((r,i)=>`<button class="opt ${a!=null?(i===correctIdx?"ok":(i===a?"bad":"")):""}" data-act="radPick" data-i="${i}" ${a!=null?"disabled":""}><span class="hz copy" style="font-size:30px;line-height:1">${esc(r)}</span><span class="copy">${esc(radInfo(r))}</span></button>`).join("")}</div>`;
   }else{
-    body=`<div class="card"><div class="bigz">${GRID}<span class="hz">${esc(it.rad)}</span></div><div class="prompt"><div class="q">${t("radAskB")}</div><div>${esc(radInfo(it.rad))}</div></div></div>
-     <div class="opts hzopts">${it.opts.map((c,i)=>`<button class="opt hzo ${a!=null?(i===correctIdx?"ok":(i===a?"bad":"")):""}" data-act="radPick" data-i="${i}" ${a!=null?"disabled":""}>${esc(c)}</button>`).join("")}</div>`;
+    body=`<div class="card"><div class="bigz">${GRID}<span class="hz copy">${esc(it.rad)}</span></div><div class="prompt"><div class="q">${t("radAskB")}</div><div class="copy">${esc(radInfo(it.rad))}</div></div></div>
+     <div class="opts hzopts">${it.opts.map((c,i)=>`<button class="opt hzo ${a!=null?(i===correctIdx?"ok":(i===a?"bad":"")):""}" data-act="radPick" data-i="${i}" ${a!=null?"disabled":""}><span class="copy">${esc(c)}</span></button>`).join("")}</div>`;
   }
-  if(a!=null) body+=`<b style="color:${a===correctIdx?"var(--jade)":"var(--seal)"}">${a===correctIdx?t("correct"):t("wrong")}</b>${charParts(it.c)}<div class="small"><b>${esc(S.C[it.c].py)}</b> · ${esc(charMean(it.c))}</div>`;
+  if(a!=null) body+=`<b style="color:${a===correctIdx?"var(--jade)":"var(--seal)"}">${a===correctIdx?t("correct"):t("wrong")}</b>${charParts(it.c)}<div class="small"><b class="copy">${esc(S.C[it.c].py)}</b> · <span class="copy">${esc(charMean(it.c))}</span></div>`;
   frame(SES.idx/SES.items.length,`${SES.idx+1} / ${SES.items.length}`,body,a!=null?`<button class="btn primary block" data-act="radNext" style="min-height:52px">${t("next")}</button>`:"");
 }
 
@@ -892,7 +898,7 @@ function finishSpeed(){SES.running=false;clearTimeout(SES.tm);endSpeed()}
 function endSpeed(){
   const a=SES.known.length,b=a+SES.unknown.length;
   frame(1,"",`<div class="result"><div class="score">${a}</div><div class="muted">${t("speedResult",{a,b})}</div>
-   ${SES.unknown.length?`<p class="small" style="margin:8px 0 0">${t("unknownList")}</p><div class="list">${SES.unknown.map(w=>`<button class="li" data-act="word" data-id="${w.i}"><span class="hz">${esc(w.h)}</span><span class="small"><b>${esc(pyOf(w))}</b><br>${esc(meaning(w,null,true))}</span></button>`).join("")}</div>`:""}</div>`,
+   ${SES.unknown.length?`<p class="small" style="margin:8px 0 0">${t("unknownList")}</p><div class="list">${SES.unknown.map(w=>`<button class="li" data-act="word" data-id="${w.i}"><span class="hz copy">${esc(w.h)}</span><span class="small"><b class="copy">${esc(pyOf(w))}</b><br><span class="copy">${esc(meaning(w,null,true))}</span></span></button>`).join("")}</div>`:""}</div>`,
    `<div class="row" style="flex-wrap:nowrap"><button class="btn block" data-act="endSession">${t("done")}</button><button class="btn seal block" data-act="mode" data-mode="speed">${t("again2")}</button></div>`);
 }
 
@@ -915,7 +921,7 @@ function renderPlace(){
   if(!SES.cur) placeQ();
   const {w,opts}=SES.cur, a=SES.answered;
   frame(SES.qn/21,`HSK ${lvName(SES.lv)}`,`<div class="card">${bigHz(w.h)}<div class="prompt"><div class="q">${t("mcAskM")}</div></div></div>
-   <div class="opts">${opts.map((x,i)=>`<button class="opt ${a!=null?(x===w?"ok":(i===a?"bad":"")):""}" data-act="placePick" data-i="${i}" ${a!=null?"disabled":""}><span class="k">${i+1}</span><span>${esc(meaning(x,null,true))}</span></button>`).join("")}</div>`,
+   <div class="opts">${opts.map((x,i)=>`<button class="opt ${a!=null?(x===w?"ok":(i===a?"bad":"")):""}" data-act="placePick" data-i="${i}" ${a!=null?"disabled":""}><span class="k">${i+1}</span><span class="copy">${esc(meaning(x,null,true))}</span></button>`).join("")}</div>`,
    a!=null?`<button class="btn primary block" data-act="placeNext" style="min-height:52px">${t("next")}</button>`:"");
 }
 function placePick(i){
@@ -988,8 +994,23 @@ function importSheet(prefill){
 }
 
 /* ================= events ================= */
+let selAtDown="",blockCopyClick=false;
+document.addEventListener("pointerdown",()=>{
+  const sel=window.getSelection();
+  selAtDown=sel&&!sel.isCollapsed?String(sel):"";
+});
+document.addEventListener("pointerup",()=>{
+  const sel=window.getSelection();
+  const now=sel&&!sel.isCollapsed?String(sel):"";
+  blockCopyClick=!!now&&now!==selAtDown;
+});
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-act],[data-say],[data-tab]"); if(!el) return;
+  if(blockCopyClick){
+    blockCopyClick=false;
+    const sel=window.getSelection();
+    if(sel&&!sel.isCollapsed&&sel.anchorNode&&el.contains(sel.anchorNode)) return;
+  }
   if(el.dataset.say!=null){e.stopPropagation();speak(el.dataset.say);return}
   if(el.dataset.tab){go(el.dataset.tab);return}
   const a=el.dataset.act, m=S.prog.meta;

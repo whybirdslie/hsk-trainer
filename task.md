@@ -51,6 +51,7 @@ Recovery-code + client-encrypted blob via Pages Functions + KV (R2 preferred whe
 - [x] Absolute TTL from create (KV `expirationTtl` + `expiresAt`); no refresh on PUT
 - [x] Fresh IV+salt every encrypt
 - [ ] Production verify: deploy + `GET /api/health` → `ok:true`
+- [x] Pages `wrangler.toml` must not set `account_id` (CI validation fail). Account comes from the Action `accountId`.
 - [ ] Optional Turnstile: set `TURNSTILE_SITE_KEY` + secret; wire widget on create
 - [ ] Optional R2: enable R2 in CF dashboard, uncomment bucket binding (code already prefers `BACKUP_BUCKET`)
 - [ ] Optional: QR library, BroadcastChannel upload leader, code rotate

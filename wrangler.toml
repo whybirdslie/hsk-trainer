@@ -1,7 +1,6 @@
 name = "hsk-trainer"
 compatibility_date = "2025-10-01"
 pages_build_output_dir = "public"
-account_id = "80d41f9e23a0f4af1bc6ffd553c5d5c8"
 
 [vars]
 # Public Turnstile site key (optional). Leave empty to skip Turnstile until configured.

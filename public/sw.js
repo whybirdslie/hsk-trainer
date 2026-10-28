@@ -1,5 +1,5 @@
 /* HSK Zeichentrainer service worker */
-const CACHE_VERSION = "hsk-v4";
+const CACHE_VERSION = "hsk-v7";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -45,6 +45,12 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+
+  // Never cache backup API (poisoned restores / stale health).
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(fetch(req));
+    return;
+  }
 
   if (req.mode === "navigate") {
     event.respondWith(networkFirst(req));

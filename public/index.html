@@ -136,6 +136,9 @@ h3{font:600 15px/1.3 var(--ui);margin:0}
 .field .seg button{padding:5px 10px}
 select{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 10px;min-height:40px}
 textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;box-sizing:border-box}
+.codebox{font:600 15px/1.55 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:14px 12px;text-align:center;user-select:text;-webkit-user-select:text;word-break:break-all}
+.cloudstat{display:flex;flex-direction:column;gap:4px}
+.cloudstat .ok{color:var(--jade)} .cloudstat .warn{color:var(--amber)} .cloudstat .bad{color:var(--seal)}
 .src{display:flex;flex-direction:column;gap:6px;font-size:13px}
 .src a{color:var(--sky)}
 /* session overlay */
@@ -274,6 +277,17 @@ const I18N = {
   dataTitle:"Fortschritt sichern", syncLocal:"Lokal auf diesem Gerät gespeichert", updateAvail:"Neue Version verfügbar. Tippen zum Neuladen",
   export:"Exportieren (JSON)", import:"Importieren", importPaste:"JSON einfügen", importDo:"Importieren", importMerge:"Mit aktuellem Fortschritt zusammenführen", importOk:"Fortschritt importiert: {n} Wörter.", importBad:"Diese Datei ist kein gültiger Export dieses Trainers.",
   exportFallback:"Kopiere diesen Text und speichere ihn als .json-Datei.", copy:"Kopieren", copied:"Kopiert.", saved:"Gespeichert.", exportDeclined:"Export abgebrochen.",
+  cloudTitle:"Cloud-Backup", cloudOff:"Kein Cloud-Backup. Wiederherstellungscode schützt vor Geräteverlust.", cloudOn:"Cloud-Backup aktiv", cloudPending:"Upload ausstehend…", cloudSynced:"Zuletzt gesichert: {t}", cloudNever:"Noch nicht hochgeladen",
+  cloudCreate:"Cloud-Backup einrichten", cloudRestore:"Mit Code wiederherstellen", cloudUnlink:"Gerät trennen", cloudDelete:"Cloud-Backup löschen",
+  cloudCodeHint:"Schreibe diesen Code auf oder teile ihn. Screenshots können in iCloud landen. Ohne Code ist das Backup weg.",
+  cloudConfirm:"Code zur Bestätigung erneut eingeben", cloudConfirmGo:"Bestätigen und aktivieren", cloudConfirmBad:"Code stimmt nicht überein.",
+  cloudRestoreHint:"Recovery-Code eingeben. Lokal leerer Stand wird mit Cloud zusammengeführt, sonst Merge nach Zeitstempel.",
+  cloudRestoreGo:"Wiederherstellen", cloudBusy:"Bitte warten…", cloudErr:"Cloud-Backup gerade nicht erreichbar.", cloudGone:"Kein Backup zu diesem Code.",
+  cloudEmptyBlock:"Lokaler Fortschritt ist leer. Cloud wird nicht überschrieben.", cloudEmptyPrompt:"Dieses Gerät ist leer, Cloud-Backup gefunden. Wiederherstellen?",
+  cloudEmptyYes:"Cloud laden", cloudEmptyNo:"Später", cloudCreated:"Cloud-Backup aktiv. Code sicher verwahren.",
+  cloudRestored:"Cloud-Backup geladen.", cloudUnlinked:"Gerät getrennt (Cloud bleibt).", cloudDeleted:"Cloud-Backup gelöscht.",
+  cloudShare:"Code teilen", cloudCopy:"Code kopieren", cloudConflict:"Konflikt: bitte erneut sichern.", cloudUnsupported:"Dieses Backup braucht eine neuere App-Version.",
+  cloudWarnAccess:"Wer den Code hat, kann lesen und überschreiben.", cloudExpire:"Gültig bis {t}", cloudSyncNow:"Jetzt sichern", cloudShowCode:"Code anzeigen",
   reset:"Fortschritt zurücksetzen", resetQ:"Wirklich alle Lerndaten löschen? Einstellungen bleiben erhalten.", resetYes:"Ja, zurücksetzen", cancel:"Abbrechen", resetDone:"Fortschritt zurückgesetzt.",
   aboutTitle:"Datenquellen", aboutText:"HSK 3.0 (2021), Stufen 1 bis 6 sowie 7–9 als gemeinsamer Block, insgesamt {n} Wörter. Deutsche Bedeutungen mit Hinweis „DE von Claude ergänzt“ und Beispielsätze von Claude bitte prüfen.",
   checkCount:"{n} Bedeutungen von Claude ergänzt", review:"Ansehen",
@@ -320,6 +334,17 @@ const I18N = {
   dataTitle:"Keep your progress", syncLocal:"Saved on this device", updateAvail:"New version available. Tap to reload",
   export:"Export (JSON)", import:"Import", importPaste:"Paste JSON", importDo:"Import", importMerge:"Merge with current progress", importOk:"Progress imported: {n} words.", importBad:"This file is not a valid export from this trainer.",
   exportFallback:"Copy this text and save it as a .json file.", copy:"Copy", copied:"Copied.", saved:"Saved.", exportDeclined:"Export cancelled.",
+  cloudTitle:"Cloud backup", cloudOff:"No cloud backup. A recovery code protects against device loss.", cloudOn:"Cloud backup on", cloudPending:"Upload pending…", cloudSynced:"Last backup: {t}", cloudNever:"Not uploaded yet",
+  cloudCreate:"Set up cloud backup", cloudRestore:"Restore with code", cloudUnlink:"Unlink this device", cloudDelete:"Delete cloud backup",
+  cloudCodeHint:"Write this code down or share it. Screenshots may sync to iCloud. Without the code the backup is gone.",
+  cloudConfirm:"Re-enter the code to confirm", cloudConfirmGo:"Confirm and enable", cloudConfirmBad:"Codes do not match.",
+  cloudRestoreHint:"Enter your recovery code. An empty local state loads the cloud copy; otherwise timestamps merge.",
+  cloudRestoreGo:"Restore", cloudBusy:"Please wait…", cloudErr:"Cloud backup is unavailable right now.", cloudGone:"No backup for this code.",
+  cloudEmptyBlock:"Local progress is empty. Cloud will not be overwritten.", cloudEmptyPrompt:"This device is empty but a cloud backup exists. Restore it?",
+  cloudEmptyYes:"Load cloud", cloudEmptyNo:"Later", cloudCreated:"Cloud backup on. Keep the code safe.",
+  cloudRestored:"Cloud backup loaded.", cloudUnlinked:"Device unlinked (cloud kept).", cloudDeleted:"Cloud backup deleted.",
+  cloudShare:"Share code", cloudCopy:"Copy code", cloudConflict:"Conflict: please save again.", cloudUnsupported:"This backup needs a newer app version.",
+  cloudWarnAccess:"Anyone with the code can read and overwrite.", cloudExpire:"Valid until {t}", cloudSyncNow:"Back up now", cloudShowCode:"Show code",
   reset:"Reset progress", resetQ:"Really delete all study data? Settings are kept.", resetYes:"Yes, reset", cancel:"Cancel", resetDone:"Progress reset.",
   aboutTitle:"Data sources", aboutText:"HSK 3.0 (2021), levels 1 to 6 plus 7–9 as one band, {n} words in total. Please check German meanings marked “DE added by Claude” and example sentences by Claude.",
   checkCount:"{n} meanings added by Claude", review:"View",
@@ -334,8 +359,10 @@ const POSKEY={n:"posN",v:"posV",a:"posA",d:"posD",q:"posQ",r:"posR",p:"posP",c:"
 /* ================= state ================= */
 const DAY=864e5, MIN=6e4;
 const LS_KEY="hsk3-trainer-v1";
+const LS_CLOUD="hsk3-trainer-cloud-v1";
+const CLOUD_CRYPTO_V=1;
 const DEF_META={lang:"de",back:"both",pinyin:true,audio:true,font:"kai",theme:"sys",newPerDay:15,session:20,speedSec:60,levels:[1],cats:[],log:{},newLog:{},placement:null,setAt:0};
-const S={W:[],C:{},cats:[],rads:{},conf:[],charIdx:new Map(),prog:{v:1,p:{},c:{},meta:{...DEF_META}},tab:"learn",wl:{q:"",scope:"sel",claude:false,limit:80}};
+const S={W:[],C:{},cats:[],rads:{},conf:[],charIdx:new Map(),prog:{v:1,p:{},c:{},meta:{...DEF_META}},tab:"learn",wl:{q:"",scope:"sel",claude:false,limit:80},cloud:null,cloudHealth:null};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function t(k,v){let s=(I18N[S.prog.meta.lang]||I18N.de)[k]??I18N.de[k]??k; if(v) for(const x in v) s=s.split("{"+x+"}").join(v[x]); return s;}
@@ -347,7 +374,7 @@ function toast(msg){const el=$("#toast");el.textContent=msg;el.hidden=false;clea
 /* ================= storage ================= */
 function lsGet(){try{const s=localStorage.getItem(LS_KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function lsSet(){try{localStorage.setItem(LS_KEY,JSON.stringify(S.prog))}catch(e){}}
-function save(){ lsSet(); }
+function save(){ lsSet(); cloudScheduleUpload(); }
 function mergeMeta(a,b){
   const out={...DEF_META,...a};
   if((b.setAt||0)>(a.setAt||0)) for(const k of ["lang","back","pinyin","audio","font","theme","newPerDay","session","speedSec","levels","cats","setAt"]) if(b[k]!==undefined) out[k]=b[k];
@@ -599,6 +626,7 @@ function viewPrefs(){
   </section>
   <section class="panel"><h3>${t("dataTitle")}</h3>
     <p class="small muted" style="margin:0">${t("syncLocal")}</p>
+    ${cloudPrefsHtml()}
     <div class="row"><button class="btn" data-act="export">${t("export")}</button><button class="btn" data-act="import">${t("import")}</button><button class="btn ghost" data-act="importPaste">${t("importPaste")}</button></div>
     <button class="btn ghost" data-act="reset" style="color:var(--seal);align-self:flex-start">${t("reset")}</button>
   </section>
@@ -677,7 +705,7 @@ function backHtml(w,o={}){
     <div class="row" style="gap:8px;flex-wrap:nowrap;align-items:flex-start"><div style="flex:1;min-width:0"><div class="zh copy">${esc(w.ex.zh)}</div>${showPy?`<div class="py copy">${esc(w.ex.py)}</div>`:""}</div>${audioBtn(w.ex.zh)}</div>
     ${back!=="en"?`<div class="tr copy">${esc(w.ex.de)}</div>`:""}${back!=="de"?`<div class="tr copy">${esc(w.ex.en)}</div>`:""}</div>`:"";
   const chars=[...w.h].filter(c=>S.C[c]);
-  const cb=chars.length>1||o.both?`<div class="chars">${chars.map(c=>`<button class="cbox" data-act="charInfo" data-ch="${esc(c)}"><span class="hz copy">${esc(c)}</span><span><span class="copy">${esc(S.C[c].py.split("/")[0])}</span><br><span class="muted">${t("radical")} <span class="copy">${esc(S.C[c].rad)}</span></span></span></button>`).join("")}</div>`:"";
+  const cb=chars.length?`<div class="chars">${chars.map(c=>`<button class="cbox" data-act="charInfo" data-ch="${esc(c)}"><span class="hz copy">${esc(c)}</span><span><span class="copy">${esc(S.C[c].py.split("/")[0])}</span><br><span class="muted">${t("radical")} <span class="copy">${esc(S.C[c].rad)}</span></span></span></button>`).join("")}</div>`:"";
   return `<div class="back">${showPy?`<div class="pyl copy">${esc(pyOf(w))}</div>`:""}${senses}${ex}${cb}</div>`;
 }
 
@@ -956,6 +984,303 @@ function startMode(k){
   if(k==="place") return startPlace();
 }
 
+/* ================= cloud backup (recovery code + encrypted blob) ================= */
+const CROCKFORD="0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+function cloudLoad(){
+  try{const s=localStorage.getItem(LS_CLOUD);S.cloud=s?JSON.parse(s):null}catch(e){S.cloud=null}
+  if(S.cloud&&typeof S.cloud==="object"){ S.cloud={code:"",etag:"",lastSyncAt:0,pending:false,enabled:false,expiresAt:"",...S.cloud}; }
+}
+function cloudSave(){
+  try{
+    if(!S.cloud||!S.cloud.enabled||!S.cloud.code){ localStorage.removeItem(LS_CLOUD); return; }
+    localStorage.setItem(LS_CLOUD,JSON.stringify({
+      code:S.cloud.code, etag:S.cloud.etag||"", lastSyncAt:S.cloud.lastSyncAt||0,
+      pending:!!S.cloud.pending, enabled:true, expiresAt:S.cloud.expiresAt||""
+    }));
+  }catch(e){}
+}
+function progressWeight(p=S.prog){ return Object.keys(p&&p.p||{}).length; }
+function cloudNormCode(raw){
+  let s=String(raw||"").toUpperCase().replace(/[^0-9A-Z]/g,"");
+  s=s.replace(/[ILOU]/g,c=>({I:"1",L:"1",O:"0",U:"V"}[c]));
+  return s;
+}
+function cloudFormatCode(norm){
+  const g=[]; for(let i=0;i<norm.length;i+=5) g.push(norm.slice(i,i+5));
+  return g.join("-");
+}
+function cloudRandomCode(){
+  const bytes=new Uint8Array(16); crypto.getRandomValues(bytes);
+  let bits=0n; for(const b of bytes) bits=(bits<<8n)|BigInt(b);
+  let out=""; for(let i=0;i<26;i++){ out=CROCKFORD[Number(bits&31n)]+out; bits>>=5n; }
+  return cloudFormatCode(out);
+}
+function b64(buf){ const u=buf instanceof ArrayBuffer?new Uint8Array(buf):buf; let s=""; for(let i=0;i<u.length;i++) s+=String.fromCharCode(u[i]); return btoa(s); }
+function unb64(str){ const bin=atob(str); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; }
+async function cloudShaHex(text){
+  const dig=await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(dig)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function cloudBackupId(norm){ return cloudShaHex("hsk-bk-id-v1|"+norm); }
+async function cloudEncKey(norm, saltBytes){
+  const ikm=await crypto.subtle.importKey("raw", new TextEncoder().encode(norm), "HKDF", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"HKDF", hash:"SHA-256", salt:saltBytes, info:new TextEncoder().encode("hsk-bk-enc-v1")},
+    ikm, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]
+  );
+}
+function cloudExportPayload(){
+  return JSON.stringify({app:"hsk3-zeichentrainer",v:1,exportedAt:new Date().toISOString(),words:S.W.length,progress:S.prog});
+}
+async function cloudEncrypt(norm, plaintext){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await cloudEncKey(norm, salt);
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, new TextEncoder().encode(plaintext));
+  return { v:CLOUD_CRYPTO_V, salt:b64(salt), iv:b64(iv), ct:b64(ct) };
+}
+async function cloudDecrypt(norm, envelope){
+  if(!envelope||envelope.v!==CLOUD_CRYPTO_V) throw new Error("cryptoV");
+  const key=await cloudEncKey(norm, unb64(envelope.salt));
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(envelope.iv)}, key, unb64(envelope.ct));
+  return new TextDecoder().decode(pt);
+}
+async function cloudApi(path, opts={}){
+  const res=await fetch(path, {
+    ...opts,
+    headers:{ "content-type":"application/json", ...(opts.headers||{}) },
+    keepalive: !!opts.keepalive
+  });
+  let data=null; try{ data=await res.json(); }catch(e){}
+  return { res, data };
+}
+async function cloudFetchHealth(){
+  try{
+    let {res,data}=await cloudApi("/api/health");
+    if(!(res.ok&&data&&data.ok)) ({res,data}=await cloudApi("/api/backup/health"));
+    if(res.ok&&data&&data.ok){ S.cloudHealth=data; return data; }
+  }catch(e){}
+  S.cloudHealth=null; return null;
+}
+function cloudStatusLine(){
+  if(!S.cloud||!S.cloud.enabled) return `<span class="muted">${t("cloudOff")}</span>`;
+  if(S.cloud.pending) return `<span class="warn">${t("cloudPending")}</span>`;
+  if(S.cloud.lastSyncAt) return `<span class="ok">${t("cloudSynced",{t:new Date(S.cloud.lastSyncAt).toLocaleString()})}</span>`;
+  return `<span class="warn">${t("cloudNever")}</span>`;
+}
+function cloudPrefsHtml(){
+  const linked=S.cloud&&S.cloud.enabled&&S.cloud.code;
+  return `<div class="cloudstat" style="margin-top:8px">
+    <b>${t("cloudTitle")}</b>
+    <p class="small" style="margin:0">${cloudStatusLine()}</p>
+    ${linked&&S.cloud.expiresAt?`<p class="small muted" style="margin:0">${t("cloudExpire",{t:new Date(S.cloud.expiresAt).toLocaleDateString()})}</p>`:""}
+    <p class="small muted" style="margin:0">${t("cloudWarnAccess")}</p>
+    <div class="row">
+      ${linked
+        ? `<button class="btn" data-act="cloudSyncNow">${t("cloudSyncNow")}</button>
+           <button class="btn ghost" data-act="cloudShowCode">${t("cloudShowCode")}</button>
+           <button class="btn ghost" data-act="cloudUnlink">${t("cloudUnlink")}</button>
+           <button class="btn ghost" data-act="cloudDelete" style="color:var(--seal)">${t("cloudDelete")}</button>`
+        : `<button class="btn primary" data-act="cloudCreate">${t("cloudCreate")}</button>
+           <button class="btn" data-act="cloudRestore">${t("cloudRestore")}</button>`}
+    </div>
+  </div>`;
+}
+let _cloudTimer=null, _cloudUploading=false;
+function cloudScheduleUpload(){
+  if(!S.cloud||!S.cloud.enabled||!S.cloud.code) return;
+  S.cloud.pending=true; cloudSave();
+  clearTimeout(_cloudTimer);
+  _cloudTimer=setTimeout(()=>{ cloudFlushUpload(); }, 8000);
+}
+async function cloudFlushUpload(opts={}){
+  if(!S.cloud||!S.cloud.enabled||!S.cloud.code) return {ok:false};
+  if(_cloudUploading) return {ok:false,busy:true};
+  const weight=progressWeight();
+  if(weight===0 && !opts.allowEmpty){
+    S.cloud.pending=false; cloudSave();
+    if(opts.toastEmpty) toast(t("cloudEmptyBlock"));
+    return {ok:false, empty:true};
+  }
+  _cloudUploading=true;
+  try{
+    const norm=cloudNormCode(S.cloud.code);
+    const id=await cloudBackupId(norm);
+    const envelope=await cloudEncrypt(norm, cloudExportPayload());
+    const headers={};
+    if(S.cloud.etag) headers["if-match"]=S.cloud.etag;
+    const {res,data}=await cloudApi(`/api/backup/${id}`, {
+      method:"PUT",
+      headers,
+      body: JSON.stringify({ ...envelope, etag:S.cloud.etag||undefined }),
+      keepalive: !!opts.keepalive
+    });
+    if(res.status===404){
+      // First upload after link without create, or expired — try create path only if we own mint.
+      S.cloud.pending=true; cloudSave();
+      return {ok:false, gone:true};
+    }
+    if(res.status===412){
+      S.cloud.pending=true; cloudSave();
+      if(!opts.silent) toast(t("cloudConflict"));
+      await cloudResolveConflict(norm, id);
+      return {ok:false, conflict:true};
+    }
+    if(!res.ok){ if(!opts.silent) toast(t("cloudErr")); return {ok:false}; }
+    S.cloud.etag=data.etag||S.cloud.etag;
+    S.cloud.expiresAt=data.expiresAt||S.cloud.expiresAt;
+    S.cloud.lastSyncAt=Date.now();
+    S.cloud.pending=false;
+    cloudSave();
+    return {ok:true};
+  }catch(e){
+    if(!opts.silent) toast(t("cloudErr"));
+    return {ok:false};
+  }finally{ _cloudUploading=false; }
+}
+async function cloudResolveConflict(norm, id){
+  try{
+    const {res,data}=await cloudApi(`/api/backup/${id}`);
+    if(!res.ok||!data) return;
+    if(data.cryptoV>CLOUD_CRYPTO_V){ toast(t("cloudUnsupported")); return; }
+    const txt=await cloudDecrypt(norm, data);
+    // Merge remote into local, then retry put once.
+    importData(txt, true, {silent:true, keepSheet:true});
+    S.cloud.etag=data.etag||"";
+    cloudSave();
+    await cloudFlushUpload({silent:true});
+  }catch(e){}
+}
+function cloudShowCodeSheet(code, {fresh}={}){
+  const shown=cloudFormatCode(cloudNormCode(code));
+  openSheet(t("cloudTitle"), `
+    <p class="small" style="margin:0">${t("cloudCodeHint")}</p>
+    <p class="small" style="margin:0;color:var(--seal)">${t("cloudWarnAccess")}</p>
+    <div class="codebox" id="cloudCodeShown">${esc(shown)}</div>
+    <div class="row">
+      <button class="btn" data-act="cloudCopyCode" data-code="${esc(shown)}">${t("cloudCopy")}</button>
+      <button class="btn" data-act="cloudShareCode" data-code="${esc(shown)}">${t("cloudShare")}</button>
+    </div>
+    ${fresh?`<div class="field"><label for="cloudConfirmIn">${t("cloudConfirm")}</label>
+      <input id="cloudConfirmIn" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card)"></div>
+      <button class="btn primary" data-act="cloudConfirmCreate" data-code="${esc(shown)}">${t("cloudConfirmGo")}</button>`
+      :`<button class="btn primary" data-act="closeSheet">${t("done")}</button>`}
+  `);
+}
+async function cloudBeginCreate(){
+  const health=S.cloudHealth||await cloudFetchHealth();
+  if(!health||!health.ok){ toast(t("cloudErr")); return; }
+  if(progressWeight()===0){ toast(t("cloudEmptyBlock")); return; }
+  const code=cloudRandomCode();
+  cloudShowCodeSheet(code, {fresh:true});
+  // stash pending mint on the sheet via dataset on body
+  S._mintCode=code;
+  if(health.siteKey) cloudEnsureTurnstile(health.siteKey);
+}
+function cloudEnsureTurnstile(siteKey){
+  if(window.turnstile||document.getElementById("cf-turnstile-api")) return;
+  const s=document.createElement("script");
+  s.id="cf-turnstile-api"; s.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; s.async=true;
+  document.head.appendChild(s);
+  S._turnstileSiteKey=siteKey;
+}
+async function cloudConfirmCreate(){
+  const expected=cloudNormCode(S._mintCode||"");
+  const typed=cloudNormCode($("#cloudConfirmIn")&&$("#cloudConfirmIn").value);
+  if(!expected||typed!==expected){ toast(t("cloudConfirmBad")); return; }
+  toast(t("cloudBusy"));
+  try{
+    const id=await cloudBackupId(expected);
+    const envelope=await cloudEncrypt(expected, cloudExportPayload());
+    let turnstileToken="";
+    if(S.cloudHealth&&S.cloudHealth.siteKey&&window.turnstile){
+      // best-effort: invisible widget not mounted in sheet; skip if no widget token
+      turnstileToken=S._turnstileToken||"";
+    }
+    const {res,data}=await cloudApi("/api/backup", {
+      method:"POST",
+      body: JSON.stringify({ id, turnstileToken, ...envelope })
+    });
+    if(res.status===409){
+      // Retry/idempotent: blob already there (e.g. flaky response). Claim if decrypt works.
+      const got=await cloudApi(`/api/backup/${id}`);
+      if(got.res.ok&&got.data){
+        try{
+          await cloudDecrypt(expected, got.data);
+          S.cloud={ code:cloudFormatCode(expected), etag:got.data.etag||"", lastSyncAt:Date.now(), pending:false, enabled:true, expiresAt:got.data.expiresAt||"" };
+          cloudSave(); S._mintCode=null;
+          closeSheet(); render(); toast(t("cloudCreated"));
+          return;
+        }catch(e){}
+      }
+      toast(t("cloudErr")); return;
+    }
+    if(!res.ok){ toast(t("cloudErr")); return; }
+    S.cloud={ code:cloudFormatCode(expected), etag:data.etag||"", lastSyncAt:Date.now(), pending:false, enabled:true, expiresAt:data.expiresAt||"" };
+    cloudSave(); S._mintCode=null;
+    closeSheet(); render(); toast(t("cloudCreated"));
+  }catch(e){ toast(t("cloudErr")); }
+}
+function cloudRestoreSheet(){
+  openSheet(t("cloudRestore"), `
+    <p class="small" style="margin:0">${t("cloudRestoreHint")}</p>
+    <input id="cloudRestoreIn" autocomplete="off" spellcheck="false" placeholder="XXXXX-XXXXX-…" style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--card);font:600 14px/1.4 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em">
+    <button class="btn primary" data-act="cloudRestoreGo">${t("cloudRestoreGo")}</button>
+  `);
+}
+async function cloudDoRestore(rawCode, {merge}={}){
+  const norm=cloudNormCode(rawCode);
+  if(norm.length<20){ toast(t("cloudGone")); return false; }
+  toast(t("cloudBusy"));
+  try{
+    const id=await cloudBackupId(norm);
+    const {res,data}=await cloudApi(`/api/backup/${id}`);
+    if(res.status===404){ toast(t("cloudGone")); return false; }
+    if(!res.ok||!data){ toast(t("cloudErr")); return false; }
+    if(data.cryptoV>CLOUD_CRYPTO_V){ toast(t("cloudUnsupported")); return false; }
+    const txt=await cloudDecrypt(norm, data);
+    const doMerge=merge!=null?merge:progressWeight()>0;
+    if(!importData(txt, doMerge, {silent:true})){ toast(t("importBad")); return false; }
+    S.cloud={ code:cloudFormatCode(norm), etag:data.etag||"", lastSyncAt:Date.now(), pending:false, enabled:true, expiresAt:data.expiresAt||"" };
+    cloudSave();
+    closeSheet(); render();
+    toast(t("cloudRestored"));
+    return true;
+  }catch(e){
+    toast(t("cloudErr"));
+    return false;
+  }
+}
+async function cloudUnlink(){
+  S.cloud=null; cloudSave(); render(); toast(t("cloudUnlinked"));
+}
+async function cloudDeleteRemote(){
+  if(!S.cloud||!S.cloud.code) return;
+  try{
+    const id=await cloudBackupId(cloudNormCode(S.cloud.code));
+    const {res}=await cloudApi(`/api/backup/${id}?confirm=1`, { method:"DELETE", body: JSON.stringify({confirm:true}) });
+    if(!res.ok&&res.status!==404){ toast(t("cloudErr")); return; }
+    S.cloud=null; cloudSave(); render(); toast(t("cloudDeleted"));
+  }catch(e){ toast(t("cloudErr")); }
+}
+async function cloudBootCheck(){
+  cloudLoad();
+  await cloudFetchHealth();
+  if(!S.cloud||!S.cloud.enabled||!S.cloud.code) return;
+  if(progressWeight()>0){
+    cloudScheduleUpload();
+    return;
+  }
+  // Empty local + linked code → force restore prompt (never auto-PUT empty).
+  openSheet(t("cloudTitle"), `
+    <p style="margin:0">${t("cloudEmptyPrompt")}</p>
+    <div class="row">
+      <button class="btn primary" data-act="cloudBootRestore">${t("cloudEmptyYes")}</button>
+      <button class="btn ghost" data-act="closeSheet">${t("cloudEmptyNo")}</button>
+    </div>
+  `);
+}
+
 /* ================= export / import ================= */
 async function doExport(){
   const payload=JSON.stringify({app:"hsk3-zeichentrainer",v:1,exportedAt:new Date().toISOString(),words:S.W.length,progress:S.prog},null,1);
@@ -980,12 +1305,19 @@ async function doExport(){
   }catch(e){}
   openSheet(t("export"),`<p class="small" style="margin:0">${t("exportFallback")}</p><textarea id="exportTxt" readonly>${esc(payload)}</textarea><button class="btn primary" data-act="copyExport">${t("copy")}</button>`);
 }
-function importData(txt,merge){
-  let d; try{d=JSON.parse(txt)}catch(e){toast(t("importBad"));return}
-  const p=d&&d.progress; if(!p||typeof p!=="object"||!p.p||!p.meta){toast(t("importBad"));return}
+function importData(txt,merge,opts={}){
+  let d; try{d=JSON.parse(txt)}catch(e){ if(!opts.silent) toast(t("importBad")); return false; }
+  const p=d&&d.progress; if(!p||typeof p!=="object"||!p.p||!p.meta){ if(!opts.silent) toast(t("importBad")); return false; }
+  // Empty/fresh installs must not poison cloud merge with young timestamps.
+  if(merge && progressWeight()===0) merge=false;
   if(merge){ mergeRecs(S.prog.p,p.p); for(const c in (p.c||{})){const l=S.prog.c[c],r=p.c[c];if(!l||(r[2]||0)>(l[2]||0))S.prog.c[c]=r} S.prog.meta=mergeMeta(S.prog.meta,p.meta); }
   else { S.prog={v:1,p:p.p,c:p.c||{},meta:{...DEF_META,...p.meta}}; }
-  save(); applyPrefs(); closeSheet(); render(); toast(t("importOk",{n:Object.keys(p.p).length}));
+  lsSet(); applyPrefs();
+  if(!opts.keepSheet) closeSheet();
+  render();
+  if(!opts.silent) toast(t("importOk",{n:Object.keys(p.p).length}));
+  cloudScheduleUpload();
+  return true;
 }
 function importSheet(prefill){
   openSheet(t("import"),`<textarea id="importTxt" placeholder='{"app":"hsk3-zeichentrainer", …}'>${esc(prefill||"")}</textarea>
@@ -1056,6 +1388,18 @@ document.addEventListener("click",e=>{
     case "importPaste": importSheet(""); break;
     case "doImport": importData($("#importTxt").value,$("#importMerge").checked); break;
     case "copyExport": { const ta=$("#exportTxt"); navigator.clipboard&&navigator.clipboard.writeText(ta.value).then(()=>toast(t("copied")),()=>{ta.select()}); if(!navigator.clipboard)ta.select(); break; }
+    case "cloudCreate": cloudBeginCreate(); break;
+    case "cloudConfirmCreate": cloudConfirmCreate(); break;
+    case "cloudRestore": cloudRestoreSheet(); break;
+    case "cloudRestoreGo": cloudDoRestore($("#cloudRestoreIn")&&$("#cloudRestoreIn").value); break;
+    case "cloudBootRestore": cloudDoRestore(S.cloud&&S.cloud.code, {merge:false}); break;
+    case "cloudSyncNow": cloudFlushUpload({toastEmpty:true}).then(r=>{ if(r&&r.ok){ toast(t("saved")); if(S.tab==="prefs") render(); } }); break;
+    case "cloudShowCode": if(S.cloud&&S.cloud.code) cloudShowCodeSheet(S.cloud.code); break;
+    case "cloudCopyCode": { const c=el.dataset.code||""; navigator.clipboard&&navigator.clipboard.writeText(c).then(()=>toast(t("copied")),()=>{}); break; }
+    case "cloudShareCode": { const c=el.dataset.code||""; if(navigator.share){ navigator.share({title:"HSK backup",text:c}).catch(()=>{}); } else if(navigator.clipboard){ navigator.clipboard.writeText(c).then(()=>toast(t("copied"))); } break; }
+    case "cloudUnlink": cloudUnlink(); break;
+    case "cloudDelete": openSheet(t("cloudDelete"),`<p style="margin:0">${t("cloudWarnAccess")}</p><div class="row"><button class="btn" data-act="closeSheet">${t("cancel")}</button><button class="btn seal" data-act="cloudDeleteYes">${t("cloudDelete")}</button></div>`); break;
+    case "cloudDeleteYes": cloudDeleteRemote(); break;
     case "reset": openSheet(t("reset"),`<p style="margin:0">${t("resetQ")}</p><div class="row"><button class="btn" data-act="closeSheet">${t("cancel")}</button><button class="btn seal" data-act="resetYes">${t("resetYes")}</button></div>`); break;
     case "resetYes": S.prog.p={}; S.prog.c={}; m.log={}; m.newLog={}; m.placement=null; save(); closeSheet(); render(); toast(t("resetDone")); break;
   }
@@ -1080,8 +1424,10 @@ document.addEventListener("keydown",e=>{
   else if(SES.kind==="speed"&&SES.running){ if(k==="ArrowRight"||k==="k")speedAns(1); else if(k==="ArrowLeft"||k==="j")speedAns(0); }
   else if(SES.kind==="place"&&SES.started&&!SES.finished){ if(SES.answered==null&&/^[1-4]$/.test(k))placePick(+k-1); else if(SES.answered!=null&&(k==="Enter"||k===" ")){e.preventDefault();placeNext()} }
 });
-window.addEventListener("pagehide",()=>{lsSet()});
-document.addEventListener("visibilitychange",()=>{if(document.hidden){lsSet()}});
+window.addEventListener("pagehide",()=>{lsSet(); cloudFlushUpload({silent:true,keepalive:true});});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){ lsSet(); cloudFlushUpload({silent:true,keepalive:true}); }
+});
 
 /* ================= boot ================= */
 function registerSW(){
@@ -1128,6 +1474,7 @@ function registerSW(){
   $("#tabs").hidden=false; render();
   loadKai();
   registerSW();
+  cloudBootCheck();
 })();
 </script>
 

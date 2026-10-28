@@ -6,3 +6,6 @@
 
 /manifest.webmanifest
   Cache-Control: no-cache
+
+/api/*
+  Cache-Control: no-store

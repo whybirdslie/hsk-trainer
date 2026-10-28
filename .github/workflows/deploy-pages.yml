@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: read
       deployments: write
-    name: Deploy public/ to Cloudflare Pages
+    name: Deploy public/ + functions to Cloudflare Pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,5 +21,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: 80d41f9e23a0f4af1bc6ffd553c5d5c8
+          # Reads wrangler.toml (KV binding BACKUP_KV) and ships functions/
           command: pages deploy public --project-name=hsk-trainer
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,20 @@
+name = "hsk-trainer"
+compatibility_date = "2025-10-01"
+pages_build_output_dir = "public"
+account_id = "80d41f9e23a0f4af1bc6ffd553c5d5c8"
+
+[vars]
+# Public Turnstile site key (optional). Leave empty to skip Turnstile until configured.
+TURNSTILE_SITE_KEY = ""
+# Absolute backup lifetime from create (days). Not refreshed on PUT.
+BACKUP_TTL_DAYS = "365"
+BACKUP_MAX_BYTES = "524288"
+
+# R2 preferred when account has R2 enabled; until then KV is bound below.
+# [[r2_buckets]]
+# binding = "BACKUP_BUCKET"
+# bucket_name = "hsk-trainer-backups"
+
+[[kv_namespaces]]
+binding = "BACKUP_KV"
+id = "88b30019b8474fbca7f07791428a7644"

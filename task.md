@@ -47,9 +47,10 @@ Recovery-code + client-encrypted blob via Pages Functions + KV (R2 preferred whe
 - [x] KV namespace `hsk-trainer-backups` id `88b30019b8474fbca7f07791428a7644`, binding `BACKUP_KV`
 - [x] `wrangler.toml` Pages config; deploy must include `functions/`
 - [x] Client: Crockford 128-bit code, confirm re-type, AES-GCM + HKDF, debounce upload, empty-PUT guard, boot restore prompt, If-Match / 412 merge retry
-- [x] SW `hsk-v7`: never cache `/api/*`
+- [x] SW `hsk-v8`: never cache `/api/*`
 - [x] Absolute TTL from create (KV `expirationTtl` + `expiresAt`); no refresh on PUT
 - [x] Fresh IV+salt every encrypt
+- [x] UI polish 2026-10-31: cloud/data settings button grid (jade/sky pair + stacked secondary); autosave `cloudErr` toast once then silent until success; viewport zoom locked; flashcard `.chars` chips stretch full width in one row. Cache `hsk-v8`.
 - [ ] Production verify: deploy + `GET /api/health` → `ok:true`
 - [x] Pages `wrangler.toml` must not set `account_id` (CI validation fail). Account comes from the Action `accountId`.
 - [ ] Optional Turnstile: set `TURNSTILE_SITE_KEY` + secret; wire widget on create
@@ -75,7 +76,7 @@ Recovery-code + client-encrypted blob via Pages Functions + KV (R2 preferred whe
 | Empty-local cloud wipe | Never auto-PUT when `progressWeight()===0`; boot restore prompt |
 | TTL immortal abuse | Absolute `expiresAt` from create; KV TTL set from remaining life |
 | KV eventual consistency | Create confirm + 409 claim via GET/decrypt; prefer R2 later |
-| SW stale / API poison | `hsk-v7` + `/api/*` network-only + `_headers` no-store |
+| SW stale / API poison | `hsk-v8` + `/api/*` network-only + `_headers` no-store |
 | Mint typo orphan | Re-type confirm before enable |
 | iOS kill before flush | `keepalive` PUT on hide; pending status UI |
 | Empty merge poison | `importData`: empty local forces replace not merge |

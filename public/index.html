@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>HSK Zeichentrainer</title>
 <meta name="theme-color" content="#B5332B" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#12161B" media="(prefers-color-scheme: dark)">
@@ -38,7 +38,7 @@
   --paper:#12161B; --card:#1A1F26; --sunk:#232932; --ink:#ECEEE9; --ink2:#B6BBC2; --ink3:#828A94; --line:#2E353F;
   --grid:#5C2F2B; --seal:#E05A4E; --seal-ink:#1A0F0D; --jade:#62B896; --jade-bg:#1D3A30; --amber:#E3A646; --amber-bg:#3B2E17;
   --sky:#86B6E0; --sky-bg:#1C2D3E; --red-bg:#3E2020; color-scheme:dark }
-body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--ui);-webkit-text-size-adjust:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--ui);-webkit-text-size-adjust:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 input,textarea,.copy{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -70,6 +70,8 @@ h3{font:600 15px/1.3 var(--ui);margin:0}
 .btn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 14px;font-weight:600;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .btn.seal{background:var(--seal);color:var(--seal-ink);border-color:var(--seal)}
+.btn.jade{background:var(--jade-bg);color:var(--jade);border-color:color-mix(in srgb,var(--jade) 35%,var(--line))}
+.btn.sky{background:var(--sky-bg);color:var(--sky);border-color:color-mix(in srgb,var(--sky) 35%,var(--line))}
 .btn.ghost{background:transparent}
 .btn.block{width:100%}
 .btn:disabled{opacity:.45;cursor:default}
@@ -137,7 +139,7 @@ h3{font:600 15px/1.3 var(--ui);margin:0}
 select{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 10px;min-height:40px}
 textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;box-sizing:border-box}
 .codebox{font:600 15px/1.55 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:14px 12px;text-align:center;user-select:text;-webkit-user-select:text;word-break:break-all}
-.cloudstat{display:flex;flex-direction:column;gap:4px}
+.cloudstat{display:flex;flex-direction:column;gap:8px}
 .cloudstat .ok{color:var(--jade)} .cloudstat .warn{color:var(--amber)} .cloudstat .bad{color:var(--seal)}
 .src{display:flex;flex-direction:column;gap:6px;font-size:13px}
 .src a{color:var(--sky)}
@@ -171,7 +173,8 @@ textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:
 .ex .zh{font-family:var(--hz);font-size:20px;line-height:1.35}
 .ex .py{font-size:13px;color:var(--ink2)}
 .ex .tr{font-size:14px}
-.chars{display:flex;gap:8px;flex-wrap:wrap}
+.chars{display:flex;gap:8px;flex-wrap:nowrap;width:100%}
+.chars .cbox{flex:1;min-width:0}
 .cbox{border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:flex;gap:8px;align-items:center;font-size:12.5px;max-width:100%}
 .cbox .hz{font-size:24px;line-height:1}
 .audio{border:1px solid var(--line);background:var(--card);border-radius:999px;width:40px;height:40px;display:grid;place-items:center}
@@ -627,8 +630,9 @@ function viewPrefs(){
   <section class="panel"><h3>${t("dataTitle")}</h3>
     <p class="small muted" style="margin:0">${t("syncLocal")}</p>
     ${cloudPrefsHtml()}
-    <div class="row"><button class="btn" data-act="export">${t("export")}</button><button class="btn" data-act="import">${t("import")}</button><button class="btn ghost" data-act="importPaste">${t("importPaste")}</button></div>
-    <button class="btn ghost" data-act="reset" style="color:var(--seal);align-self:flex-start">${t("reset")}</button>
+    <div class="xbtns"><button class="btn" data-act="export">${t("export")}</button><button class="btn" data-act="import">${t("import")}</button></div>
+    <button class="btn block ghost" data-act="importPaste">${t("importPaste")}</button>
+    <button class="btn block ghost" data-act="reset" style="color:var(--seal)">${t("reset")}</button>
   </section>
   <section class="panel"><h3>${t("aboutTitle")}</h3>
     <p class="small" style="margin:0">${esc(t("aboutText",{n:S.W.length.toLocaleString()}))}</p>
@@ -1075,23 +1079,31 @@ function cloudPrefsHtml(){
     <p class="small" style="margin:0">${cloudStatusLine()}</p>
     ${linked&&S.cloud.expiresAt?`<p class="small muted" style="margin:0">${t("cloudExpire",{t:new Date(S.cloud.expiresAt).toLocaleDateString()})}</p>`:""}
     <p class="small muted" style="margin:0">${t("cloudWarnAccess")}</p>
-    <div class="row">
-      ${linked
-        ? `<button class="btn" data-act="cloudSyncNow">${t("cloudSyncNow")}</button>
-           <button class="btn ghost" data-act="cloudShowCode">${t("cloudShowCode")}</button>
-           <button class="btn ghost" data-act="cloudUnlink">${t("cloudUnlink")}</button>
-           <button class="btn ghost" data-act="cloudDelete" style="color:var(--seal)">${t("cloudDelete")}</button>`
-        : `<button class="btn primary" data-act="cloudCreate">${t("cloudCreate")}</button>
-           <button class="btn" data-act="cloudRestore">${t("cloudRestore")}</button>`}
-    </div>
+    ${linked
+      ? `<div class="xbtns">
+           <button class="btn jade" data-act="cloudSyncNow">${t("cloudSyncNow")}</button>
+           <button class="btn sky" data-act="cloudShowCode">${t("cloudShowCode")}</button>
+         </div>
+         <button class="btn block ghost" data-act="cloudUnlink">${t("cloudUnlink")}</button>
+         <button class="btn block ghost" data-act="cloudDelete" style="color:var(--seal)">${t("cloudDelete")}</button>`
+      : `<div class="xbtns">
+           <button class="btn jade" data-act="cloudCreate">${t("cloudCreate")}</button>
+           <button class="btn sky" data-act="cloudRestore">${t("cloudRestore")}</button>
+         </div>`}
   </div>`;
 }
-let _cloudTimer=null, _cloudUploading=false;
+let _cloudTimer=null, _cloudUploading=false, _cloudErrShown=false;
+function cloudToastErr(opts={}){
+  if(opts.silent) return;
+  if(opts.autosave && _cloudErrShown) return;
+  toast(t("cloudErr"));
+  if(opts.autosave) _cloudErrShown=true;
+}
 function cloudScheduleUpload(){
   if(!S.cloud||!S.cloud.enabled||!S.cloud.code) return;
   S.cloud.pending=true; cloudSave();
   clearTimeout(_cloudTimer);
-  _cloudTimer=setTimeout(()=>{ cloudFlushUpload(); }, 8000);
+  _cloudTimer=setTimeout(()=>{ cloudFlushUpload({autosave:true}); }, 8000);
 }
 async function cloudFlushUpload(opts={}){
   if(!S.cloud||!S.cloud.enabled||!S.cloud.code) return {ok:false};
@@ -1126,15 +1138,16 @@ async function cloudFlushUpload(opts={}){
       await cloudResolveConflict(norm, id);
       return {ok:false, conflict:true};
     }
-    if(!res.ok){ if(!opts.silent) toast(t("cloudErr")); return {ok:false}; }
+    if(!res.ok){ cloudToastErr(opts); return {ok:false}; }
     S.cloud.etag=data.etag||S.cloud.etag;
     S.cloud.expiresAt=data.expiresAt||S.cloud.expiresAt;
     S.cloud.lastSyncAt=Date.now();
     S.cloud.pending=false;
+    _cloudErrShown=false;
     cloudSave();
     return {ok:true};
   }catch(e){
-    if(!opts.silent) toast(t("cloudErr"));
+    cloudToastErr(opts);
     return {ok:false};
   }finally{ _cloudUploading=false; }
 }

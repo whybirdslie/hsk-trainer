@@ -1,5 +1,5 @@
 /* HSK Zeichentrainer service worker */
-const CACHE_VERSION = "hsk-v8";
+const CACHE_VERSION = "hsk-v9";
 const PRECACHE = [
   "./",
   "./index.html",
